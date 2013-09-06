@@ -6,7 +6,11 @@ import sys
 def main():
 	
 	#Constants		
+<<<<<<< HEAD
 	PORT = 5160
+=======
+	PORT = 5036
+>>>>>>> parent of eda64c2... Working primitively
 	ADDRESS = "localhost"
 
 	client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

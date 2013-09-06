@@ -8,12 +8,16 @@ import time
 def main():
 	
 	#Constants
+<<<<<<< HEAD
 	PORT = 5160
+=======
+	PORT = 5036
+>>>>>>> parent of eda64c2... Working primitively
 	ADDRESS = "localhost"
-	MAX_COUNT1 = 1				#Change these to schedule the processes
+	MAX_COUNT1 = 2				#Change these to schedule the processes
 	MAX_COUNT2 = 5
 	MAX_COUNT3 = 3
-	MAX_COUNT4 = 3
+	MAX_COUNT4 = 2
 	q1 = Queue()				#Buffer queue for register
 	q2 = Queue()				#Buffer queue for sharing
 	q3 = Queue()				#Buffer queue for search
@@ -26,12 +30,21 @@ def main():
 	server_socket.listen(5)
 
 	sys.stdout.write("Server running...\n");
+
+	#Starting the queue handling processes
+	for i in range(MAX_COUNT1):
+		qH = Process(target=q1Handler, args=(qd,q1,cDict))
+		qH.start()
+	for i in range(MAX_COUNT2):
+		qH = Process(target=q2Handler, args=(qd,q2,cDict))
+		qH.start()
+	for i in range(MAX_COUNT3):
+		qH = Process(target=q3Handler, args=(qd,q3,cDict))
+		qH.start()
 	
 	#Connecting to new Clients
+	#All the I/O operations are also done here
 	KEY = 0													#Unique key identifier for each client
-	count1 = Value('i', 0)
-	count2 = Value('i', 0)
-	count3 = Value('i', 0)
 	count4 = Value('i', 0)
 	
 	while 1:
@@ -59,6 +72,7 @@ def main():
 			temp = qd.get()
 			del cDict[temp]
 
+<<<<<<< HEAD
 		#Starting the queue handlers
 		if count1.value<MAX_COUNT1:
 			count1.value += 1
@@ -75,10 +89,13 @@ def main():
 			qH = Process(target=q3Handler, args=(qd,q3,count3,cDict))
 			qH.start()
 
+=======
+>>>>>>> parent of eda64c2... Working primitively
 
 
-def q1Handler(qd,q1,count1,cDict):
+def q1Handler(qd,q1,cDict):
 	#This process empties the queue, updates the data structures.
+<<<<<<< HEAD
 	if not q1.empty():
 		KEY = q1.get()
 		try:
@@ -99,13 +116,30 @@ def q1Handler(qd,q1,count1,cDict):
 			q1.put(KEY)
 	count1.value = count1.value - 1
 
+=======
+	while 1:
+		KEY = q1.get()
+		print cDict
+		[client_socket, address] = cDict[KEY]
+		try:
+			client_socket.send("Let's begin the registration process!\n")
+		except:
+			sys.stdout.write(str(address)+" closed due to error.\n")
+			qd.put(KEY)
+>>>>>>> parent of eda64c2... Working primitively
 
 
-def q2Handler(qd,q2,count2,cDict):
+
+def q2Handler(qd,q2,cDict):
 	#This process empties the queue, updates the data structures.
+<<<<<<< HEAD
 	if not q2.empty():
+=======
+	while 1:
+>>>>>>> parent of eda64c2... Working primitively
 		KEY = q2.get()
 		try:
+<<<<<<< HEAD
 			[client_socket, address] = cDict[KEY]
 			try:
 				client_socket.send("Let's begin the registration process!\n")
@@ -122,14 +156,24 @@ def q2Handler(qd,q2,count2,cDict):
 		except:
 			q2.put(KEY)
 	count2.value -= 1
+=======
+			client_socket.send("Knowledge grows when shared!\n")
+		except:
+			sys.stdout.write(str(address)+" closed due to error.\n")
+			qd.put(KEY)
+>>>>>>> parent of eda64c2... Working primitively
 
 
-
-def q3Handler(qd,q3,count3,cDict):
+def q3Handler(qd,q3,cDict):
 	#This process empties the queue, updates the data structures.
+<<<<<<< HEAD
 	if not q3.empty():
+=======
+	while 1:
+>>>>>>> parent of eda64c2... Working primitively
 		KEY = q3.get()
 		try:
+<<<<<<< HEAD
 			[client_socket, address] = cDict[KEY]
 			try:
 				client_socket.send("Let's begin the registration process!\n")
@@ -147,6 +191,12 @@ def q3Handler(qd,q3,count3,cDict):
 			q3.put(KEY)
 	count3.value -= 1
 
+=======
+			client_socket.send("Enter your search string:\n")
+		except:
+			sys.stdout.write(str(address)+" closed due to error.\n")
+			qd.put(KEY)		
+>>>>>>> parent of eda64c2... Working primitively
 
 
 def newClient(client_socket,address,count4,qd,q1,q2,q3,KEY):
@@ -182,12 +232,12 @@ def newClient(client_socket,address,count4,qd,q1,q2,q3,KEY):
 				sys.stdout.write(str(address)+" closed.\n")
 				qd.put(str(KEY))
 				flag = False
-				count4.value -= 1
+				count4.value = count4.value-1
 		except:
 			sys.stdout.write(str(address)+" closed due to error.\n")
 			qd.put(str(KEY))
 			flag = False
-			count4.value -= 1
+			count4.value = count4.value-1
 		break
 
 	if flag:
