@@ -8,7 +8,7 @@ import time
 def main():
 	
 	#Constants
-	PORT = 5100
+	PORT = 5160
 	ADDRESS = "localhost"
 	MAX_COUNT1 = 1				#Change these to schedule the processes
 	MAX_COUNT2 = 5
@@ -33,9 +33,10 @@ def main():
 	count2 = Value('i', 0)
 	count3 = Value('i', 0)
 	count4 = Value('i', 0)
+	
 	while 1:
 		#Checking for clients
-		if count4.value < MAX_COUNT4:
+		if count4.value <= MAX_COUNT4:
 			client_socket, address = server_socket.accept()
 			try:
 				PORT += 1
@@ -44,7 +45,7 @@ def main():
 				client_socket.send(str(PORT))				#Sending port to make a server
 				time.sleep(0.5)								#Time reqd. to send the above packet
 				count4.value += 1
-				clientHandler = Process(target=newClient, args=(client_socket,address,count1,count2,count3,count4,MAX_COUNT1,MAX_COUNT2,MAX_COUNT3,qd,q1,q2,q3,KEY,cDict))
+				clientHandler = Process(target=newClient, args=(client_socket,address,count4,qd,q1,q2,q3,KEY))
 				clientHandler.start()
 			except:
 				continue
@@ -53,6 +54,12 @@ def main():
 			client_socket.send('Q')
 			client_socket.close()
 		
+		#Deleting closed clients
+		while not qd.empty():
+			temp = qd.get()
+			del cDict[temp]
+
+		#Starting the queue handlers
 		if count1.value<MAX_COUNT1:
 			count1.value += 1
 			qH = Process(target=q1Handler, args=(qd,q1,count1,cDict))
@@ -68,79 +75,81 @@ def main():
 			qH = Process(target=q3Handler, args=(qd,q3,count3,cDict))
 			qH.start()
 
-		#Deleting closed clients
-		while not qd.empty():
-			temp = qd.get()
-			del cDict[temp]
-
 
 
 def q1Handler(qd,q1,count1,cDict):
 	#This process empties the queue, updates the data structures.
-	if ~q1.empty():
+	if not q1.empty():
 		KEY = q1.get()
-		[client_socket, address] = cDict[KEY]
 		try:
-			client_socket.send("Let's begin the registration process!\n")
-			data = client_socket.recv(512)
-			
-			#Closing client connection
-			client_socket.send('Q')
-			client_socket.close()
-			count1.value -= 1
-			sys.stdout.write(str(address)+" closed.\n")
-			qd.put(KEY)
+			[client_socket, address] = cDict[KEY]
+			try:
+				client_socket.send("Let's begin the registration process!\n")
+				data = client_socket.recv(512)
+				
+				#Closing client connection
+				client_socket.send('Q')
+				client_socket.close()
+				sys.stdout.write(str(address)+" closed.\n")
+				qd.put(KEY)
+			except:
+				sys.stdout.write(str(address)+" closed due to error.\n")
+				qd.put(KEY)
 		except:
-			count1.value -= 1
-			sys.stdout.write(str(address)+" closed due to error.\n")
-			qd.put(KEY)
-	
+			q1.put(KEY)
+	count1.value = count1.value - 1
+
 
 
 def q2Handler(qd,q2,count2,cDict):
 	#This process empties the queue, updates the data structures.
-	if ~q2.empty():
+	if not q2.empty():
 		KEY = q2.get()
-		[client_socket, address] = cDict[KEY]
 		try:
-			client_socket.send("Let's begin the registration process!\n")
-			data = client_socket.recv(512)
-			
-			#Closing client connection
-			client_socket.send('Q')
-			client_socket.close()
-			count2.value -= 1
-			sys.stdout.write(str(address)+" closed.\n")
-			qd.put(KEY)
+			[client_socket, address] = cDict[KEY]
+			try:
+				client_socket.send("Let's begin the registration process!\n")
+				data = client_socket.recv(512)
+				
+				#Closing client connection
+				client_socket.send('Q')
+				client_socket.close()
+				sys.stdout.write(str(address)+" closed.\n")
+				qd.put(KEY)
+			except:
+				sys.stdout.write(str(address)+" closed due to error.\n")
+				qd.put(KEY)
 		except:
-			count2.value -= 1
-			sys.stdout.write(str(address)+" closed due to error.\n")
-			qd.put(KEY)
+			q2.put(KEY)
+	count2.value -= 1
 
 
 
 def q3Handler(qd,q3,count3,cDict):
 	#This process empties the queue, updates the data structures.
-	if ~q3.empty():
+	if not q3.empty():
 		KEY = q3.get()
-		[client_socket, address] = cDict[KEY]
 		try:
-			client_socket.send("Let's begin the registration process!\n")
-			data = client_socket.recv(512)
-			
-			#Closing client connection
-			client_socket.send('Q')
-			client_socket.close()
-			count3.value -= 1
-			sys.stdout.write(str(address)+" closed.\n")
-			qd.put(KEY)
+			[client_socket, address] = cDict[KEY]
+			try:
+				client_socket.send("Let's begin the registration process!\n")
+				data = client_socket.recv(512)
+				
+				#Closing client connection
+				client_socket.send('Q')
+				client_socket.close()
+				sys.stdout.write(str(address)+" closed.\n")
+				qd.put(KEY)
+			except:
+				sys.stdout.write(str(address)+" closed due to error.\n")
+				qd.put(KEY)
 		except:
-			count3.value -= 1
-			sys.stdout.write(str(address)+" closed due to error.\n")
-			qd.put(KEY)
+			q3.put(KEY)
+	count3.value -= 1
 
 
-def newClient(client_socket,address,count1,count2,count3,count4,MAX_COUNT1,MAX_COUNT2,MAX_COUNT3,qd,q1,q2,q3,KEY,cDict):
+
+def newClient(client_socket,address,count4,qd,q1,q2,q3,KEY):
 	#This function will take input from the client and accordingly
 	#add it to its buffer queue
 	tmp0 = ""
@@ -160,22 +169,10 @@ def newClient(client_socket,address,count1,count2,count3,count4,MAX_COUNT1,MAX_C
 			data = client_socket.recv(8)
 			if data=='1':
 				q1.put(str(KEY))
-				if count1.value<MAX_COUNT1:
-					count1.value += 1
-					qH = Process(target=q1Handler, args=(qd,q1,count1,cDict))
-					qH.start()
 			elif data=='2':
 				q2.put(str(KEY))
-				if count2.value<MAX_COUNT2:
-					count2.value += 1
-					qH = Process(target=q2Handler, args=(qd,q2,count2,cDict))
-					qH.start()
 			elif data=='3':
 				q3.put(str(KEY))
-				if count3.value<MAX_COUNT3:
-					count3.value += 1
-					qH = Process(target=q3Handler, args=(qd,q3,count3,cDict))
-					qH.start()
 			elif i<=3 and data!='Q':
 				tmp0 = "\nNot a valid input. Let's try again...\n"
 				continue

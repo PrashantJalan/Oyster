@@ -6,7 +6,7 @@ import sys
 def main():
 	
 	#Constants		
-	PORT = 5100
+	PORT = 5160
 	ADDRESS = "localhost"
 
 	client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
