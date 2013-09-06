@@ -4,20 +4,24 @@ import socket
 import os
 import sys
 
+#Constants
 PORT = 5005
 ADDRESS = ""
 
+#Assigning server
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind((ADDRESS, PORT))
 server_socket.listen(5)
 
 sys.stdout.write("Server running...\n");
 
+#Handling Clients
 while 1:
 	client_socket, address = server_socket.accept()
 	if os.fork()==0:
 		sys.stdout.write("I got a connection from "+str(address)+"\n")
 		STATE = 'INITIAL'
+		data = ""
 		while 1:
 			if STATE=='INITIAL':
 				tmp1 = "Welcome Guest!\n"
@@ -26,7 +30,7 @@ while 1:
 				tmp4 = "2: Share a file\n"
 				tmp5 = "3: Search for a file\n"
 				tmp6 = "Q: Quit\n"
-				data = tmp1+tmp2+tmp3+tmp4+tmp5+tmp6
+				data = data+tmp1+tmp2+tmp3+tmp4+tmp5+tmp6
 			
 			client_socket.send(data)
 							 
@@ -36,3 +40,6 @@ while 1:
 				client_socket.close()
 				sys.stdout.write(str(address)+" closed.\n")
 				quit()
+			else:
+				data = "\nWrong input, lets try again!\n"
+				STATE = 'INITIAL'
