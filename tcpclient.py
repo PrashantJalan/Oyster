@@ -1,27 +1,44 @@
 import socket
+import sys
 
-PORT = 5010
-ADDRESS = "localhost"
 
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client_socket.connect((ADDRESS, PORT))
 
-#Making the client a server
-NEW_PORT = int(client_socket.recv(8))
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind((ADDRESS, NEW_PORT))
-server_socket.listen(5)
-
-while 1:
-	data = client_socket.recv(512)
-	print data
+def main():
 	
-	data = raw_input()
-	
-	if (data <> 'Q'):
-		client_socket.send(data)
-	else:
-		client_socket.send(data)
+	#Constants		
+	PORT = 5020
+	ADDRESS = "localhost"
+
+	client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	client_socket.connect((ADDRESS, PORT))
+
+	#Making the client a server
+	data = client_socket.recv(8)
+	if data=='Q':
+		print "Connection to server closed."
 		client_socket.close()
-		break;
+		quit()
+	else:
+		NEW_PORT = int(data)
+	
+	server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	server_socket.bind((ADDRESS, NEW_PORT))
+	server_socket.listen(5)
 
+	sys.stdout.write("Made the client a server on PORT "+str(NEW_PORT)+'\n')
+
+	while 1:
+		data = client_socket.recv(512)
+		if data=='Q':
+			print "Connection to server closed."
+			client_socket.close()
+			quit()
+		
+		print data
+		data = raw_input()
+		client_socket.send(data)
+
+
+
+if __name__=='__main__':
+	main()
