@@ -15,6 +15,5 @@ def print_time( threadName):
 delay=2
 threading.Thread( target=print_time, args= ("Thread-1",) ).start()
 
-while 1:
-   time.sleep(10)
-   delay +=2
+time.sleep(10)
+delay +=2
