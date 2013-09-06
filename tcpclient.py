@@ -1,8 +1,6 @@
-# TCP client example
-
 import socket
 
-PORT = 5007
+PORT = 5010
 ADDRESS = "localhost"
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -17,6 +15,7 @@ server_socket.listen(5)
 while 1:
 	data = client_socket.recv(512)
 	print data
+	
 	data = raw_input()
 	
 	if (data <> 'Q'):
