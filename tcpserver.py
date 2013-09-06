@@ -19,13 +19,12 @@ sys.stdout.write("Server running...\n");
 #Handling Clients
 while 1:
 	client_socket, address = server_socket.accept()
+	PORT += 1
 	if os.fork()==0:
 		try:
 			sys.stdout.write("Got a connection from "+str(address)+"\n")
 			STATE = 'INITIAL'
-			client_socket.send(str(address[0]))
-			time.sleep(0.05)
-			client_socket.send(str(address[1]))
+			client_socket.send(str(PORT))
 			time.sleep(0.05)
 			data = ""
 			while 1:
