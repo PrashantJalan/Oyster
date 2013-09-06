@@ -45,7 +45,7 @@ def main():
 				client_socket.send(str(PORT))				#Sending port to make a server
 				time.sleep(0.5)								#Time reqd. to send the above packet
 				count4.value += 1
-				clientHandler = Process(target=newClient, args=(client_socket,address,count4,qd,q1,q2,q3,KEY))
+				clientHandler = Process(target=newClient, args=(client_socket,address,count1,count2,count3,count4,MAX_COUNT1,MAX_COUNT2,MAX_COUNT3,MAX_COUNT4,qd,q1,q2,q3,KEY,cDict))
 				clientHandler.start()
 			except:
 				continue
@@ -79,7 +79,7 @@ def main():
 
 def q1Handler(qd,q1,count1,cDict):
 	#This process empties the queue, updates the data structures.
-	if not q1.empty():
+	while not q1.empty():
 		KEY = q1.get()
 		try:
 			[client_socket, address] = cDict[KEY]
@@ -97,13 +97,14 @@ def q1Handler(qd,q1,count1,cDict):
 				qd.put(KEY)
 		except:
 			q1.put(KEY)
+			break
 	count1.value = count1.value - 1
 
 
 
 def q2Handler(qd,q2,count2,cDict):
 	#This process empties the queue, updates the data structures.
-	if not q2.empty():
+	while not q2.empty():
 		KEY = q2.get()
 		try:
 			[client_socket, address] = cDict[KEY]
@@ -121,13 +122,14 @@ def q2Handler(qd,q2,count2,cDict):
 				qd.put(KEY)
 		except:
 			q2.put(KEY)
+			break
 	count2.value -= 1
 
 
 
 def q3Handler(qd,q3,count3,cDict):
 	#This process empties the queue, updates the data structures.
-	if not q3.empty():
+	while not q3.empty():
 		KEY = q3.get()
 		try:
 			[client_socket, address] = cDict[KEY]
@@ -145,11 +147,12 @@ def q3Handler(qd,q3,count3,cDict):
 				qd.put(KEY)
 		except:
 			q3.put(KEY)
+			break
 	count3.value -= 1
 
 
 
-def newClient(client_socket,address,count4,qd,q1,q2,q3,KEY):
+def newClient(client_socket,address,count1,count2,count3,count4,MAX_COUNT1,MAX_COUNT2,MAX_COUNT3,MAX_COUNT4,qd,q1,q2,q3,KEY,cDict):
 	#This function will take input from the client and accordingly
 	#add it to its buffer queue
 	tmp0 = ""
@@ -169,10 +172,22 @@ def newClient(client_socket,address,count4,qd,q1,q2,q3,KEY):
 			data = client_socket.recv(8)
 			if data=='1':
 				q1.put(str(KEY))
+				if count1.value<MAX_COUNT1:
+					count1.value += 1
+					qH = Process(target=q1Handler, args=(qd,q1,count1,cDict))
+					qH.start()				
 			elif data=='2':
-				q2.put(str(KEY))
+				q2.put(str(KEY))						
+				if count2.value<MAX_COUNT2:
+					count2.value += 1
+					qH = Process(target=q2Handler, args=(qd,q2,count2,cDict))
+					qH.start()
 			elif data=='3':
-				q3.put(str(KEY))
+				q3.put(str(KEY))						
+				if count3.value<MAX_COUNT3:
+					count3.value += 1
+					qH = Process(target=q3Handler, args=(qd,q3,count3,cDict))
+					qH.start()
 			elif i<=3 and data!='Q':
 				tmp0 = "\nNot a valid input. Let's try again...\n"
 				continue
