@@ -10,6 +10,7 @@ q1 = Queue.Queue()						#Buffer queue for register
 q2 = Queue.Queue()						#Buffer queue for sharing
 q3 = Queue.Queue()						#Buffer queue for search
 c4 = 0									#Count; needed for checking new clients
+db = []									#Database
 
 
 def main():
@@ -21,7 +22,7 @@ def main():
 	MAX_COUNT2 = 5
 	MAX_COUNT3 = 3
 	MAX_COUNT4 = 3
-	PORT = 5535
+	PORT = 5575
 	ADDRESS = "localhost"
 	
 	#Assigning server
@@ -48,7 +49,7 @@ def main():
 				client_socket.send(str(PORT))				#Sending port to make a server
 				time.sleep(0.1)								#Time reqd. to send the above packet
 				c4 += 1
-				threading.Thread(target = newClient, args = (client_socket, address)).start()
+				threading.Thread(target = newClient, args = (client_socket, address, PORT)).start()
 			except:
 				continue
 		else:
@@ -64,7 +65,7 @@ def q1Handler():
 	global q3
 
 	while 1:
-		[client_socket, address] = q1.get()
+		[client_socket, address, PORT] = q1.get()
 		try:
 			client_socket.send("Let's begin the registration process!\nEnter your full name:")
 			data = client_socket.recv(512)
@@ -82,15 +83,17 @@ def q2Handler():
 	global q1
 	global q2
 	global q3
+	global db
 
 	while 1:
-		[client_socket, address] = q2.get()
+		[client_socket, address, PORT] = q2.get()
 		try:
 			client_socket.send("Knowledge grows with sharing!\nEnter your no. of files you want to share:")
 			data = client_socket.recv(8)
 			for i in range(int(data)):
 				client_socket.send("Enter the full file path:")
 				data = client_socket.recv(512)
+				db.append([data, PORT])
 			client_socket.send("Thank you for sharing!\nQ")
 			client_socket.close()
 			sys.stdout.write(str(address)+" closed.\n")
@@ -103,19 +106,38 @@ def q3Handler():
 	global q1
 	global q2
 	global q3
+	global db
 
 	while 1:
-		[client_socket, address] = q3.get()
+		[client_socket, address, PORT] = q3.get()
 		try:
 			client_socket.send("Enter the search string:")
 			data = client_socket.recv(512)
+			tmp = []
+			i = 0
+			result = ""
+			for it in db:
+				if data in it[0]:
+					result = result+str(i+1)+": "+it[0]+'\n'
+					tmp.append(str(it[1])+" "+it[0])
+					i = i+1
+			if i==0:
+				client_socket.send("Sorry! No files found.\nQ")
+			else:
+				result += "Enter the file number: (-1 if you don't want to download)"
+				client_socket.send(result)
+				data = client_socket.recv(8)
+				if data=='-1':
+					client_socket.send('Q')
+				else:
+					client_socket.send("dl"+tmp[int(data)-1])
 			client_socket.close()
 			sys.stdout.write(str(address)+" closed.\n")
 		except:
 			pass			
 
 
-def newClient(client_socket, address):
+def newClient(client_socket, address, PORT):
 	#This function will take input from the client and accordingly
 	#add it to its buffer queue
 	global q1
@@ -138,11 +160,11 @@ def newClient(client_socket, address):
 			client_socket.send(tmp0+tmp1+tmp2+tmp3+tmp4+tmp5+tmp6)
 			data = client_socket.recv(8)
 			if data=='1':
-				q1.put([client_socket,address])
+				q1.put([client_socket,address,PORT])
 			elif data=='2':
-				q2.put([client_socket,address])						
+				q2.put([client_socket,address,PORT])						
 			elif data=='3':
-				q3.put([client_socket,address])						
+				q3.put([client_socket,address,PORT])						
 			elif i<=3 and data!='Q':
 				tmp0 = "\nNot a valid input. Let's try again...\n"
 				continue
