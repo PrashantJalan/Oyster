@@ -4,7 +4,7 @@ import sys
 
 def main():
 	#Constants		
-	PORT = 5575
+	PORT = 5585
 	ADDRESS = "localhost"
 
 	client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -26,8 +26,10 @@ def main():
 
 	while 1:
 		data = client_socket.recv(512)
-		if data[-1]=='Q':
-			print data[:-1]
+		if '\rec' in data[0:4]:
+			print data[3:]
+			continue
+		if data=='Q':
 			print "Connection to server closed."
 			client_socket.close()
 			quit()
@@ -35,7 +37,7 @@ def main():
 			DL_PORT = data[2:].split()[0]
 			FILE = data[2:].split()[1]
 			print DL_PORT, FILE
-			quit()		
+			continue		
 		print data
 		data = raw_input()
 		client_socket.send(data)

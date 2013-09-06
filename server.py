@@ -9,7 +9,7 @@ import time
 q1 = Queue.Queue()						#Buffer queue for register
 q2 = Queue.Queue()						#Buffer queue for sharing
 q3 = Queue.Queue()						#Buffer queue for search
-c4 = 0									#Count; needed for checking new clients
+buf = Queue.Queue()						#Buffer queue for new clients
 db = []									#Database
 
 
@@ -17,12 +17,12 @@ def main():
 	global q1
 	global q2
 	global q3
-	global c4
+	global buf
 	MAX_COUNT1 = 10						#Change these for diff scheduling algorithms
 	MAX_COUNT2 = 5
 	MAX_COUNT3 = 3
 	MAX_COUNT4 = 3
-	PORT = 5575
+	PORT = 5585
 	ADDRESS = "localhost"
 	
 	#Assigning server
@@ -39,23 +39,19 @@ def main():
 		threading.Thread(target = q2Handler, args = ()).start()
 	for i in range(MAX_COUNT3):
 		threading.Thread(target = q3Handler, args = ()).start()
-
+	for i in range(MAX_COUNT4):
+		threading.Thread(target = newClient, args = ()).start()
+		
 	while 1:
 		#Checking for clients
-		if c4 <= MAX_COUNT4:
-			client_socket, address = server_socket.accept()
-			try:
-				PORT += 1
-				client_socket.send(str(PORT))				#Sending port to make a server
-				time.sleep(0.1)								#Time reqd. to send the above packet
-				c4 += 1
-				threading.Thread(target = newClient, args = (client_socket, address, PORT)).start()
-			except:
-				continue
-		else:
-			client_socket, address = server_socket.accept()
-			client_socket.send('Q')
-			client_socket.close()
+		client_socket, address = server_socket.accept()
+		try:
+			PORT += 1
+			client_socket.send(str(PORT))				#Sending port to make a server
+			time.sleep(0.1)								#Time reqd. to send the above packet
+			buf.put([client_socket, address, PORT])
+		except:
+			continue
 
 
 def q1Handler():
@@ -63,6 +59,7 @@ def q1Handler():
 	global q1
 	global q2
 	global q3
+	global buf
 
 	while 1:
 		[client_socket, address, PORT] = q1.get()
@@ -71,9 +68,8 @@ def q1Handler():
 			data = client_socket.recv(512)
 			client_socket.send("Enter your email address:")
 			data = client_socket.recv(512)
-			client_socket.send("You are now registered to our network!\nQ")
-			client_socket.close()
-			sys.stdout.write(str(address)+" closed.\n")
+			client_socket.send("\recYou are now registered to our network!\n")
+			buf.put([client_socket, address, PORT])
 		except:
 			pass
 
@@ -94,9 +90,8 @@ def q2Handler():
 				client_socket.send("Enter the full file path:")
 				data = client_socket.recv(512)
 				db.append([data, PORT])
-			client_socket.send("Thank you for sharing!\nQ")
-			client_socket.close()
-			sys.stdout.write(str(address)+" closed.\n")
+			client_socket.send("\recThank you for sharing!\n")
+			buf.put([client_socket, address, PORT])
 		except:
 			pass
 			
@@ -111,77 +106,77 @@ def q3Handler():
 	while 1:
 		[client_socket, address, PORT] = q3.get()
 		try:
-			client_socket.send("Enter the search string:")
+			client_socket.send("Enter the search string: (* for all)")
 			data = client_socket.recv(512)
 			tmp = []
 			i = 0
 			result = ""
-			for it in db:
-				if data in it[0]:
+			if data == '*':
+				for it in db:
 					result = result+str(i+1)+": "+it[0]+'\n'
 					tmp.append(str(it[1])+" "+it[0])
 					i = i+1
+			else:
+				for it in db:
+					if data in it[0]:
+						result = result+str(i+1)+": "+it[0]+'\n'
+						tmp.append(str(it[1])+" "+it[0])
+						i = i+1
 			if i==0:
-				client_socket.send("Sorry! No files found.\nQ")
+				client_socket.send("\recSorry! No files found.\n")
 			else:
 				result += "Enter the file number: (-1 if you don't want to download)"
 				client_socket.send(result)
 				data = client_socket.recv(8)
-				if data=='-1':
-					client_socket.send('Q')
-				else:
+				if data!='-1':
 					client_socket.send("dl"+tmp[int(data)-1])
-			client_socket.close()
-			sys.stdout.write(str(address)+" closed.\n")
+				else:
+					client_socket.send("\rec\n")
+			buf.put([client_socket, address, PORT])
 		except:
 			pass			
 
 
-def newClient(client_socket, address, PORT):
+def newClient():
 	#This function will take input from the client and accordingly
 	#add it to its buffer queue
 	global q1
 	global q2
 	global q3
-	global c4
+	global buf
 	tmp0 = ""
-	flag = True
-	sys.stdout.write("Got a connection from "+str(address)+'\n')
-	i = 0
-	while 1:
-		i += 1
-		try:
-			tmp1 = "Welcome Guest!\n"
-			tmp2 = "Select an option from the list -\n"
-			tmp3 = "1: Register with Oyster\n"
-			tmp4 = "2: Share a file\n"
-			tmp5 = "3: Search for a file\n"
-			tmp6 = "Q: Quit\n"
-			client_socket.send(tmp0+tmp1+tmp2+tmp3+tmp4+tmp5+tmp6)
-			data = client_socket.recv(8)
-			if data=='1':
-				q1.put([client_socket,address,PORT])
-			elif data=='2':
-				q2.put([client_socket,address,PORT])						
-			elif data=='3':
-				q3.put([client_socket,address,PORT])						
-			elif i<=3 and data!='Q':
-				tmp0 = "\nNot a valid input. Let's try again...\n"
-				continue
-			else:
-				client_socket.send('Q')
-				client_socket.close()
-				sys.stdout.write(str(address)+" closed.\n")
-				flag = False
-				c4 -= 1
-		except:
-			sys.stdout.write(str(address)+" closed due to error.\n")
-			flag = False
-			c4 -= 1
-		break
 
-	if flag:
-		sys.stdout.write(str(address)+" added to queue.\n")
+	while 1:
+		[client_socket, address, PORT] = buf.get()
+		sys.stdout.write("Got a connection from "+str(address)+'\n')
+		i = 0
+		while 1:
+			i += 1
+			try:
+				tmp1 = "Welcome Guest!\n"
+				tmp2 = "Select an option from the list -\n"
+				tmp3 = "1: Register with Oyster\n"
+				tmp4 = "2: Share a file\n"
+				tmp5 = "3: Search for a file\n"
+				tmp6 = "Q: Quit\n"
+				client_socket.send(tmp0+tmp1+tmp2+tmp3+tmp4+tmp5+tmp6)
+				data = client_socket.recv(8)
+				if data=='1':
+					q1.put([client_socket,address,PORT])
+				elif data=='2':
+					q2.put([client_socket,address,PORT])						
+				elif data=='3':
+					q3.put([client_socket,address,PORT])						
+				elif i<=3 and data!='Q':
+					tmp0 = "\nNot a valid input. Let's try again...\n"
+					continue
+				else:
+					client_socket.send('Q')
+					client_socket.close()
+					sys.stdout.write(str(address)+" closed.\n")
+			except:
+				sys.stdout.write(str(address)+" closed due to error.\n")
+			break
 
 
 
