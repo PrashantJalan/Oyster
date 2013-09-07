@@ -10,6 +10,7 @@ q1 = Queue.Queue()						#Buffer queue for register
 q2 = Queue.Queue()						#Buffer queue for sharing
 q3 = Queue.Queue()						#Buffer queue for search
 buf = Queue.Queue()						#Buffer queue for new clients
+online = []								#Buffer queue for online clients
 db = []									#Database
 
 
@@ -18,6 +19,7 @@ def main():
 	global q2
 	global q3
 	global buf
+	global online
 	MAX_COUNT1 = 10						#Change these for diff scheduling algorithms
 	MAX_COUNT2 = 5
 	MAX_COUNT3 = 3
@@ -50,6 +52,7 @@ def main():
 			client_socket.send(str(PORT))				#Sending port to make a server
 			time.sleep(0.1)								#Time reqd. to send the above packet
 			buf.put([client_socket, address, PORT])
+			online.append([client_socket, address, PORT])
 		except:
 			continue
 
@@ -80,6 +83,7 @@ def q2Handler():
 	global q2
 	global q3
 	global db
+	global buf
 
 	while 1:
 		[client_socket, address, PORT] = q2.get()
@@ -93,7 +97,7 @@ def q2Handler():
 			client_socket.send("\recThank you for sharing!\n")
 			buf.put([client_socket, address, PORT])
 		except:
-			pass
+			buf.put([client_socket, address, PORT])
 			
 			
 def q3Handler():
@@ -102,6 +106,7 @@ def q3Handler():
 	global q2
 	global q3
 	global db
+	global buf
 
 	while 1:
 		[client_socket, address, PORT] = q3.get()
@@ -134,7 +139,7 @@ def q3Handler():
 					client_socket.send("\rec\n")
 			buf.put([client_socket, address, PORT])
 		except:
-			pass			
+			buf.put([client_socket, address, PORT])		
 
 
 def newClient():
@@ -144,6 +149,7 @@ def newClient():
 	global q2
 	global q3
 	global buf
+	global online
 	tmp0 = ""
 
 	while 1:
@@ -173,8 +179,10 @@ def newClient():
 				else:
 					client_socket.send('Q')
 					client_socket.close()
+					online.remove([client_socket, address, PORT])
 					sys.stdout.write(str(address)+" closed.\n")
 			except:
+				online.remove([client_socket, address, PORT])
 				sys.stdout.write(str(address)+" closed due to error.\n")
 			break
 
