@@ -11,7 +11,7 @@ def main():
 	global client_socket
 	
 	#Constants		
-	PORT = 5600
+	PORT = 5670
 	ADDRESS = "localhost"
 
 	client_socket.connect((ADDRESS, PORT))
@@ -31,7 +31,9 @@ def main():
 
 	#Starting threads
 	threading.Thread(target = clientFunc, args = ()).start()
-	threading.Thread(target = serverFunc, args = ()).start()
+	t = threading.Thread(target = serverFunc, args = ())
+	t.daemon = True
+	t.start()
 	
 
 def serverFunc():

@@ -24,7 +24,7 @@ def main():
 	MAX_COUNT2 = 5
 	MAX_COUNT3 = 3
 	MAX_COUNT4 = 3
-	PORT = 5600
+	PORT = 5670
 	ADDRESS = "localhost"
 	
 	#Assigning server
@@ -55,7 +55,7 @@ def main():
 			online.append([client_socket, address, PORT])
 		except:
 			continue
-
+		
 
 def q1Handler():
 	#This process empties the queue, updates the data structures.
@@ -93,7 +93,7 @@ def q2Handler():
 			for i in range(int(data)):
 				client_socket.send("Enter the full file path:")
 				data = client_socket.recv(512)
-				db.append([data, PORT])
+				db.append([data, [client_socket, address, PORT]])
 			client_socket.send("\recThank you for sharing!\n")
 			buf.put([client_socket, address, PORT])
 		except:
@@ -107,6 +107,7 @@ def q3Handler():
 	global q3
 	global db
 	global buf
+	global online
 
 	while 1:
 		[client_socket, address, PORT] = q3.get()
@@ -119,14 +120,15 @@ def q3Handler():
 			if data == '*':
 				for it in db:
 					result = result+str(i+1)+": "+it[0]+'\n'
-					tmp.append(str(it[1])+" "+it[0])
+					tmp.append(str(it[1][2])+" "+it[0])
 					i = i+1
 			else:
 				for it in db:
 					if data in it[0]:
-						result = result+str(i+1)+": "+it[0]+'\n'
-						tmp.append(str(it[1])+" "+it[0])
-						i = i+1
+						if it[1] in online:
+							result = result+str(i+1)+": "+it[0]+'\n'
+							tmp.append(str(it[1][2])+" "+it[0])
+							i = i+1
 			if i==0:
 				client_socket.send("\recSorry! No files found.\n")
 			else:
