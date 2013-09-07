@@ -20,10 +20,10 @@ def main():
 	global q3
 	global buf
 	global online
-	MAX_COUNT1 = 10						#Change these for diff scheduling algorithms
+	MAX_COUNT1 = 5						#Change these for diff scheduling algorithms
 	MAX_COUNT2 = 5
 	MAX_COUNT3 = 3
-	MAX_COUNT4 = 3
+	MAX_COUNT4 = 10
 	PORT = 5900
 	ADDRESS = "localhost"
 	

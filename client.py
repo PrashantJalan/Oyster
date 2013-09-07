@@ -46,10 +46,8 @@ def serverFunc():
 		try:
 			f = client_socket2.recv(512)
 			try:
-				print f
 				content = open(f).read()
 				length = len(content)
-				print length
 				client_socket2.send(str(length))
 				time.sleep(0.1)
 				for it in content:
