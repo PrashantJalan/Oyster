@@ -72,7 +72,7 @@ def clientFunc():
 				print "Connection Established"
 				peer_socket.send(FILE)
 			except:
-				print "Some error occured! Could not download"
+				print "Some error occured! Could not download\n"
 			continue		
 		print data
 		data = raw_input()
