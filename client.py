@@ -11,7 +11,7 @@ def main():
 	global client_socket
 	
 	#Constants		
-	PORT = 5680
+	PORT = 5750
 	ADDRESS = "localhost"
 
 	client_socket.connect((ADDRESS, PORT))
@@ -44,7 +44,6 @@ def serverFunc():
 		client_socket2, address = server_socket.accept()
 		try:
 			f = client_socket2.recv(512)
-			print f
 		except:
 			continue
 
@@ -62,13 +61,15 @@ def clientFunc():
 			client_socket.close()
 			quit()
 		if data[0:2]=='dl':
-			DL_PORT = int(data[2:].split()[0])
-			FILE = data[2:].split()[1]
-			print DL_PORT, FILE
+			tmp = data[2:].split()
+			DL_ADRS = tmp[0][2:-2]
+			DL_PORT = int(tmp[3])
+			FILE = tmp[2]
+			print DL_ADRS, DL_PORT, FILE
 			print "Establishing a p2p connection..."
 			try:
 				peer_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-				peer_socket.connect((ADDRESS, DL_PORT))
+				peer_socket.connect((DL_ADRS, DL_PORT))
 				print "Connection Established"
 				peer_socket.send(FILE)
 			except:

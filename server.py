@@ -24,7 +24,7 @@ def main():
 	MAX_COUNT2 = 5
 	MAX_COUNT3 = 3
 	MAX_COUNT4 = 3
-	PORT = 5680
+	PORT = 5750
 	ADDRESS = "localhost"
 	
 	#Assigning server
@@ -120,14 +120,14 @@ def q3Handler():
 			if data == '*':
 				for it in db:
 					result = result+str(i+1)+": "+it[0]+'\n'
-					tmp.append(str(it[1][2])+" "+it[0])
+					tmp.append(str(it[1][1])+" "+it[0]+" "+str(it[1][2]))
 					i = i+1
 			else:
 				for it in db:
 					if data in it[0]:
 						if it[1] in online:
 							result = result+str(i+1)+": "+it[0]+'\n'
-							tmp.append(str(it[1][2])+" "+it[0])
+							tmp.append(str(it[1][1])+" "+it[0]+" "+str(it[1][2]))
 							i = i+1
 			if i==0:
 				client_socket.send("\recSorry! No files found.\n")
