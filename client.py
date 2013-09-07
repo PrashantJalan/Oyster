@@ -1,7 +1,7 @@
 import socket
 import sys
 import threading
-
+import time
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -11,8 +11,9 @@ def main():
 	global client_socket
 	
 	#Constants		
-	PORT = 5750
+	PORT = 5900
 	ADDRESS = "localhost"
+	CHUNK_SIZE = 1024
 
 	client_socket.connect((ADDRESS, PORT))
 
@@ -27,7 +28,7 @@ def main():
 	
 	server_socket.bind((ADDRESS, NEW_PORT))
 	server_socket.listen(5)
-	sys.stdout.write("Made the client a server on PORT "+str(NEW_PORT)+'\n')
+	sys.stdout.write("\nMade the client a server on PORT "+str(NEW_PORT)+'\n\n')
 
 	#Starting threads
 	threading.Thread(target = clientFunc, args = ()).start()
@@ -44,6 +45,19 @@ def serverFunc():
 		client_socket2, address = server_socket.accept()
 		try:
 			f = client_socket2.recv(512)
+			try:
+				print f
+				content = open(f).read()
+				length = len(content)
+				print length
+				client_socket2.send(str(length))
+				time.sleep(0.1)
+				for it in content:
+					client_socket2.send(it)
+				client_socket2.close()	
+			except:
+				client_socket2.send('X')
+				client_socket2.close()			
 		except:
 			continue
 
@@ -72,6 +86,30 @@ def clientFunc():
 				peer_socket.connect((DL_ADRS, DL_PORT))
 				print "Connection Established"
 				peer_socket.send(FILE)
+				tmp = peer_socket.recv(512)
+				if tmp=='X':
+					print "Some error occured! File not found problem.\n"
+					peer_socket.close()
+					continue
+				else:
+					length = int(tmp)
+				print "Length of the file - ",length,". Downloading..."
+				tmp = peer_socket.recv(1)
+				if tmp=='X':
+					print "Some error occured! Transfer of bytes problem.\n"
+					peer_socket.close()
+					continue
+				else:
+					content = tmp
+				for i in range(length-1):
+					tmp = peer_socket.recv(1)
+					content += tmp
+				f = open("/home/prashant/Downloads/"+FILE.split('/')[-1], 'w')
+				f.write(content)
+				f.close()
+				print "File Dowloaded successfully."
+				sys.stdout.write("File saved to "+"/home/prashant/Downloads/"+FILE.split('/')[-1]+'\n\n')
+				peer_socket.close()
 			except:
 				print "Some error occured! Could not download\n"
 			continue		
