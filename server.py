@@ -22,7 +22,7 @@ def main():
 	MAX_COUNT2 = 5
 	MAX_COUNT3 = 3
 	MAX_COUNT4 = 3
-	PORT = 5585
+	PORT = 5600
 	ADDRESS = "localhost"
 	
 	#Assigning server
